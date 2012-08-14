@@ -1,0 +1,16 @@
+- debug
+- repodatao
+- */iso
++ */os/Packages
+- */os/*
+- */updates/fastbugs
++ Packages/y*
+- Packages/*
++ */updates/security/a*
+- */updates/security/*
++ SRPMS/vendor/y*
+- SRPMS/vendor/*
+- SRPMS/repos
+- SRPMS/sl6-added
+- SRPMS/sl6-changed
++ */

@@ -1,0 +1,13 @@
+- debug
+- repodata
++ */packages/*/p*
+- */packages/*/*
++ */source/p*
+- */source/*
++ repos/oss/source/s*
+- repos/oss/source/*
++ */packages/p*
+- */packages/*
++ repos/non-oss/source/s*
+- repos/non-oss/source/*
++ */

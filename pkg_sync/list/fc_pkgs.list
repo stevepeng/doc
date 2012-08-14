@@ -1,0 +1,8 @@
+- debug
+- drpms
+- repodata
++ */Packages/y
+- */Packages/*
++ */y*
+- */*
++ */
