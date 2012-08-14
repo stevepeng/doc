@@ -28,7 +28,7 @@ function sl_pkgs_download() {
   do
     while [ "$i" -le "$count" ]
     do
-      rsync -rptgoLDv --timeout=120 --include-from=$pkg_sync_dir/list/sl_pkgs.list --log-file=$rsync_log_path/sl_rsync_$(date +%Y%m%d).log \
+      rsync -rptLDv --timeout=120 --include-from=$pkg_sync_dir/list/sl_pkgs.list --log-file=$rsync_log_path/sl_rsync_$(date +%Y%m%d).log \
 --progress $sl_mirror_site/$arch $sl_pkgs_path >> $rsync_log_path/sl_updatelist_$(date +%Y%m%d)
         if [ "$?" == "0" ]; then
           echo "Download successfully(scientific linux,$arch)"
@@ -56,7 +56,7 @@ function fc_pkgs_download() {
   do
     while [ "$i" -le "$count" ]
     do
-      rsync -rptgoLDv --timeout=120 --include-from=$pkg_sync_dir/list/fc_pkgs.list --log-file=$rsync_log_path/fc_rsync_$(date +%Y%m%d).log \
+      rsync -rptLDv --timeout=120 --include-from=$pkg_sync_dir/list/fc_pkgs.list --log-file=$rsync_log_path/fc_rsync_$(date +%Y%m%d).log \
 --progress $fc_mirror_site/$arch $fc_pkgs_path >> $rsync_log_path/fc_updatelist_$(date +%Y%m%d)
         if [ "$?" == "0" ]; then
           echo "Download successfully(Fedora,$arch)"
@@ -75,7 +75,7 @@ function fc_pkgs_download() {
   do
     while [ "$i" -le "$count" ]
     do
-      rsync -rptgoLDv --timeout=120 --include-from=$pkg_sync_dir/list/fc_pkgs.list --log-file=$rsync_log_path/fc_rsync_$(date +%Y%m%d).log \
+      rsync -rptLDv --timeout=120 --include-from=$pkg_sync_dir/list/fc_pkgs.list --log-file=$rsync_log_path/fc_rsync_$(date +%Y%m%d).log \
 --progress $fc_arm_mirror_site/$arch $fc_pkgs_path >> $rsync_log_path/fc_updatelist_$(date +%Y%m%d)
         if [ "$?" == "0" ]; then
           echo "Download successfully(Fedora,$arch)"
@@ -101,7 +101,7 @@ function meego_pkgs_download() {
   i=1
   while [ "$i" -le "$count" ]
   do
-    rsync -rptgoLDv --timeout=120 --include-from=$pkg_sync_dir/list/meego_pkgs.list --log-file=$rsync_log_path/meego_rsync_$(date +%Y%m%d).log \
+    rsync -rptLDv --timeout=120 --include-from=$pkg_sync_dir/list/meego_pkgs.list --log-file=$rsync_log_path/meego_rsync_$(date +%Y%m%d).log \
 --progress $meego_mirror_site/ $meego_pkgs_path >> $rsync_log_path/meego_updatelist_$(date +%Y%m%d)
     if [ "$?" == "0" ]; then
       echo "Download successfully(meego)"
@@ -315,8 +315,8 @@ function update_sl_repo() {
 function update_fc_repo() {
   rsync -av --delete $fc_mirror_site/i386/repodata $fc_pkgs_path/i386
   rsync -av --delete $fc_mirror_site/x86_64/repodata $fc_pkgs_path/x86_64
-  rsync -av --delete $fc_mirror_site/arm/repodata $fc_pkgs_path/x86_64
-  rsync -av --delete $fc_mirror_site/armhfp/repodata $fc_pkgs_path/x86_64
+  rsync -av --delete $fc_arm_mirror_site/arm/repodata $fc_pkgs_path/arm
+  rsync -av --delete $fc_arm_mirror_site/armhfp/repodata $fc_pkgs_path/armhfp
   rsync -av --delete $fc_mirror_site/SRPMS/repodata $fc_pkgs_path/SRPMS
 }
 function update_meego_repo() {
