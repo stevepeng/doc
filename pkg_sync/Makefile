@@ -1,2 +1,2 @@
-include ../../Makefile
-include ../../config.git/makefile.app
+include ../../../../Makefile
+include ../../../../config.git/makefile.app
