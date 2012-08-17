@@ -175,18 +175,19 @@ function upload_to_sl_git(){
         rpm -i $sl_pkgs_path/$srpm 2> /dev/null
         cp $pkg_sync_dir/Makefile $HOME/rpmbuild/$pkgname
         cd $HOME/rpmbuild/$pkgname
-        mkdir ossii || exit
-        cp -a SPECS/* ossii || exit
+#        mkdir ossii || exit
+#        cp -a SPECS/* ossii || exit
         git init
         git add . && git commit -m "upload $pkgname-$pkgver from scientific linux 6.2" 
         git remote add origin $user@$git_ip:$sl_git_path/$pkgname.git
         git push origin master
         git push origin master:refs/heads/develop
+        git push origin master:refs/heads/official
         ;;
       "0")
         if [ -e "$HOME/rpmbuild/$pkgname" ]; then
           cd $HOME/rpmbuild/$pkgname
-          git checkout develop
+          git checkout official
           if [ -e "SOURCES" -o -e "SPECS" ]; then
             git rm -r SPECS SOURCES
           fi
@@ -197,7 +198,7 @@ function upload_to_sl_git(){
           mkdir -p $HOME/rpmbuild/$pkgname
           cd $HOME/rpmbuild/$pkgname
           git clone $user@$git_ip:$sl_git_path/$pkgname.git $HOME/rpmbuild/$pkgname
-          git checkout -b develop origin/develop
+          git checkout -b official origin/official
           git rm -r SPECS SOURCES
           rpm -i $sl_pkgs_path/$srpm 2> /dev/null
           git add . && git commit -m "upload $pkgname-$pkgver from scientific linux 6.2"
@@ -231,18 +232,19 @@ function upload_to_fc_git(){
         rpm -i $fc_pkgs_path/source/$srpm 2> /dev/null
         cp $pkg_sync_dir/Makefile $HOME/rpmbuild/$pkgname
         cd $HOME/rpmbuild/$pkgname
-        mkdir ossii || exit
-        cp -a SPECS/* ossii || exit
+#        mkdir ossii || exit
+#        cp -a SPECS/* ossii || exit
         git init
         git add . && git commit -m "upload $pkgname-$pkgver from Fedora 17" 
         git remote add origin $user@$git_ip:$fc_git_path/$pkgname.git
         git push origin master
         git push origin master:refs/heads/develop
+        git push origin master:refs/heads/official
         ;;
       "0")
         if [ -e "$HOME/rpmbuild/$pkgname" ]; then
           cd $HOME/rpmbuild/$pkgname
-          git checkout develop
+          git checkout official
           if [ -e "SOURCES" -o -e "SPECS" ]; then
             git rm -r SPECS SOURCES
           fi
@@ -253,7 +255,7 @@ function upload_to_fc_git(){
           mkdir -p $HOME/rpmbuild/$pkgname
           cd $HOME/rpmbuild/$pkgname
           git clone $user@$git_ip:$fc_git_path/$pkgname.git $HOME/rpmbuild/$pkgname
-          git checkout -b develop origin/develop
+          git checkout -b official origin/official
           git rm -r SPECS SOURCES
           rpm -i $fc_pkgs_path/source/$srpm 2> /dev/null
           git add . && git commit -m "upload $pkgname-$pkgver from Fedora 17"
@@ -287,18 +289,19 @@ function upload_to_meego_git(){
         rpm -i $meego_pkgs_path/$srpm 2> /dev/null
         cp $pkg_sync_dir/Makefile $HOME/rpmbuild/$pkgname
         cd $HOME/rpmbuild/$pkgname
-        mkdir ossii || exit
-        cp -a SPECS/* ossii || exit
+#        mkdir ossii || exit
+#        cp -a SPECS/* ossii || exit
         git init
         git add . && git commit -m "upload $pkgname-$pkgver from meego 1.2" 
         git remote add origin $user@$git_ip:$meego_git_path/$pkgname.git
         git push origin master
         git push origin master:refs/heads/develop
+        git push origin master:refs/heads/official
         ;;
       "0")
         if [ -e "$HOME/rpmbuild/$pkgname" ]; then
           cd $HOME/rpmbuild/$pkgname
-          git checkout develop
+          git checkout official
           if [ -e "SOURCES" -o -e "SPECS" ]; then
             git rm -r SPECS SOURCES
           fi
@@ -308,7 +311,7 @@ function upload_to_meego_git(){
         else
           mkdir -p $HOME/rpmbuild/$pkgname
           cd $HOME/rpmbuild/$pkgname
-          git checkout -b develop origin/develop
+          git checkout -b official origin/official
           git rm -r SPECS SOURCES
           rpm -i $meego_pkgs_path/repos/$srpm 2> /dev/null
           git add . && git commit -m "upload $pkgname-$pkgver from meego 1.2" 
