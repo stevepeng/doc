@@ -1,5 +1,6 @@
 #!/bin/bash
 export PATH=/sbin:/bin:/usr/sbin:/usr/bin
+email_addr=steve@ossii.com.tw
 user=git
 git_ip=127.0.0.1
 rsync_log_path=/var/log/rsync
@@ -21,7 +22,7 @@ function sl_pkgs_download() {
   if [ ! -e "$pkg_sync_dir/list/sl_git.list" ]; then
     echo "$pkg_sync_dir/list/sl_git.list not exist"
     logger -i -p local5.notice -t pkg_rsync "$pkg_sync_dir/list/sl_git.list not exist"
-    exit 2
+    exit 1
   fi
   i=1
   for arch in i386 x86_64 SRPMS
@@ -49,7 +50,7 @@ function fc_pkgs_download() {
   if [ ! -e "$pkg_sync_dir/list/fc_git.list" ]; then
     echo "$pkg_sync_dir/list/sl_git.list not exist"
     logger -i -p local5.notice -t pkg_rsync "$pkg_sync_dir/list/fc_git.list not exist"
-    exit 3
+    exit 1
   fi
   i=1
   for arch in i386 x86_64 SRPMS
@@ -96,7 +97,7 @@ function meego_pkgs_download() {
   if [ ! -e "$pkg_sync_dir/list/meego_git.list" ]; then
     echo "$pkg_sync_dir/list/sl_git.list not exist"
     logger -i -p local5.notice -t pkg_rsync "$pkg_sync_dir/list/meego_git.list not exist"
-    exit 4
+    exit 1
   fi
   i=1
   while [ "$i" -le "$count" ]
@@ -143,7 +144,7 @@ function send_mail() {
     echo "Meego no update" >> /tmp/update.list
     echo "Meego no update" >> /tmp/update.mail
   fi
-  cat /tmp/update.mail | mail -s "Update list" -a /tmp/update.list perngs@gmail.com
+  cat /tmp/update.mail | mail -s "Update list" -a /tmp/update.list $email_addr
   rm /tmp/update.mail /tmp/update.list
 }
 
@@ -160,7 +161,7 @@ function check_rpmmacros(){
 function upload_to_sl_git(){
   for srpm in $(cat $pkg_sync_dir/list/sl_git.list)
   do
-    pkgname=$(rpm -qp --queryformat %{name}"\n" $sl_pkgs_path/$srpm)
+    pkgname=$(rpm -qp --queryformat %{name}"\n" $sl_pkgs_path/$srpm) || exit 2
     pkgver=$(rpm -qp  --queryformat %{version}-%{release}"\n" $sl_pkgs_path/$srpm)
     ssh $user@$git_ip "ls -ld $sl_git_path/$pkgname.git > /dev/null 2>&1";
     case "$?" in
@@ -168,14 +169,12 @@ function upload_to_sl_git(){
         ssh $user@$git_ip "mkdir $sl_git_path/$pkgname.git && cd $sl_git_path/$pkgname.git && git init --bare --shared"
         echo "create $pkgname.git successful"
         rpm -i $sl_pkgs_path/$srpm 2> /dev/null
-        cp $pkg_sync_dir/Makefile $HOME/rpmbuild/$pkgname
+        cp $pkg_sync_dir/Makefile $HOME/rpmbuild/$pkgname || exit 3
         cd $HOME/rpmbuild/$pkgname
-#        mkdir ossii || exit
-#        cp -a SPECS/* ossii || exit
         git init
         git add . && git commit -m "upload $pkgname-$pkgver from scientific linux 6.2" 
         git remote add origin $user@$git_ip:$sl_git_path/$pkgname.git
-        git push origin master
+        git push origin master || exit 4
         git push origin master:refs/heads/develop
         git push origin master:refs/heads/official
         ;;
@@ -188,22 +187,22 @@ function upload_to_sl_git(){
           fi
           rpm -i $sl_pkgs_path/$srpm 2> /dev/null
           git add . && git commit -m "upload $pkgname-$pkgver from scientific linux 6.2"
-          git push
+          git push || exit 5
         else
           mkdir -p $HOME/rpmbuild/$pkgname
           cd $HOME/rpmbuild/$pkgname
-          git clone $user@$git_ip:$sl_git_path/$pkgname.git $HOME/rpmbuild/$pkgname
+          git clone $user@$git_ip:$sl_git_path/$pkgname.git $HOME/rpmbuild/$pkgname || exit 6
           git checkout -b official origin/official
           git rm -r SPECS SOURCES
           rpm -i $sl_pkgs_path/$srpm 2> /dev/null
           git add . && git commit -m "upload $pkgname-$pkgver from scientific linux 6.2"
-          git push
+          git push || exit 7
         fi
         ;;
       *)
         echo "can not connect to git server"
         logger -i -p local5.notice -t pkg_rsync "can not connect to git server"
-        exit 1
+        exit 8
         ;;
     esac
     done
@@ -212,7 +211,7 @@ function upload_to_sl_git(){
 function upload_to_fc_git(){
   for srpm in $(cat $pkg_sync_dir/list/fc_git.list)
   do
-    pkgname=$(rpm -qp --queryformat %{name}"\n" $fc_pkgs_path/$srpm)
+    pkgname=$(rpm -qp --queryformat %{name}"\n" $fc_pkgs_path/$srpm) || exit 2
     pkgver=$(rpm -qp  --queryformat %{version}-%{release}"\n" $fc_pkgs_path/$srpm)
     ssh $user@$git_ip "ls -ld $fc_git_path/$pkgname.git > /dev/null 2>&1";
     case "$?" in
@@ -220,14 +219,12 @@ function upload_to_fc_git(){
         ssh $user@$git_ip "mkdir $fc_git_path/$pkgname.git && cd $fc_git_path/$pkgname.git && git init --bare --shared"
         echo "create $pkgname.git successful"
         rpm -i $fc_pkgs_path/$srpm 2> /dev/null
-        cp $pkg_sync_dir/Makefile $HOME/rpmbuild/$pkgname
+        cp $pkg_sync_dir/Makefile $HOME/rpmbuild/$pkgname || exit 3
         cd $HOME/rpmbuild/$pkgname
-#        mkdir ossii || exit
-#        cp -a SPECS/* ossii || exit
         git init
         git add . && git commit -m "upload $pkgname-$pkgver from Fedora 17" 
         git remote add origin $user@$git_ip:$fc_git_path/$pkgname.git
-        git push origin master
+        git push origin master || exit 4
         git push origin master:refs/heads/develop
         git push origin master:refs/heads/official
         ;;
@@ -240,21 +237,21 @@ function upload_to_fc_git(){
           fi
           rpm -i $sl_pkgs_path/$srpm 2> /dev/null
           git add . && git commit -m "upload $pkgname-$pkgver from Fedora 17"
-          git push
+          git push || exit 5
         else
           mkdir -p $HOME/rpmbuild/$pkgname
           cd $HOME/rpmbuild/$pkgname
-          git clone $user@$git_ip:$fc_git_path/$pkgname.git $HOME/rpmbuild/$pkgname
+          git clone $user@$git_ip:$fc_git_path/$pkgname.git $HOME/rpmbuild/$pkgname || exit 6
           git checkout -b official origin/official
           git rm -r SPECS SOURCES
           rpm -i $fc_pkgs_path/$srpm 2> /dev/null
           git add . && git commit -m "upload $pkgname-$pkgver from Fedora 17"
-          git push
+          git push || exit 7
         fi
         ;;
       *)
         echo "can not connect to git server"
-        exit 1
+        exit 8
         ;;
     esac
     done
@@ -263,7 +260,7 @@ function upload_to_fc_git(){
 function upload_to_meego_git(){
   for srpm in $(cat $pkg_sync_dir/list/meego_git.list)
   do
-    pkgname=$(rpm -qp --queryformat %{name}"\n" $meego_pkgs_path/$srpm)
+    pkgname=$(rpm -qp --queryformat %{name}"\n" $meego_pkgs_path/$srpm) || exit 2
     pkgver=$(rpm -qp  --queryformat %{version}-%{release}"\n" $meego_pkgs_path/$srpm)
     ssh $user@$git_ip "ls -ld $meego_git_path/$pkgname.git > /dev/null 2>&1";
     case "$?" in
@@ -271,14 +268,12 @@ function upload_to_meego_git(){
         ssh $user@$git_ip "mkdir $meego_git_path/$pkgname.git && cd $meego_git_path/$pkgname.git && git init --bare --shared"
         echo "create $pkgname.git successful"
         rpm -i $meego_pkgs_path/$srpm 2> /dev/null
-        cp $pkg_sync_dir/Makefile $HOME/rpmbuild/$pkgname
+        cp $pkg_sync_dir/Makefile $HOME/rpmbuild/$pkgname || exit 3
         cd $HOME/rpmbuild/$pkgname
-#        mkdir ossii || exit
-#        cp -a SPECS/* ossii || exit
         git init
         git add . && git commit -m "upload $pkgname-$pkgver from meego 1.2" 
         git remote add origin $user@$git_ip:$meego_git_path/$pkgname.git
-        git push origin master
+        git push origin master || exit 4
         git push origin master:refs/heads/develop
         git push origin master:refs/heads/official
         ;;
@@ -291,20 +286,21 @@ function upload_to_meego_git(){
           fi
           rpm -i $srpm 2> /dev/null
           git add . && git commit -m "upload $pkgname-$pkgver from meego 1.2" 
-          git push
+          git push || exit 5
         else
           mkdir -p $HOME/rpmbuild/$pkgname
           cd $HOME/rpmbuild/$pkgname
+          git clone $user@$git_ip:$meego_git_path/$pkgname.git $HOME/rpmbuild/$pkgname || exit 6
           git checkout -b official origin/official
           git rm -r SPECS SOURCES
           rpm -i $srpm 2> /dev/null
           git add . && git commit -m "upload $pkgname-$pkgver from meego 1.2" 
-          git push
+          git push || exit 7
         fi
         ;;
       *)
         echo "can not connect to git server"
-        exit 1
+        exit 8
         ;;
     esac
     done

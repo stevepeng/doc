@@ -3,7 +3,8 @@ export PATH=/sbin:/bin:/usr/sbin:/usr/bin
 user=git
 git_ip=
 pkg_sync_dir=$(pwd)
-git_path=
+ox3_pkgs_path=
+ox3_git_path=
 
 function check_rpmmacros(){
   if [ ! -e "$HOME/.rpmmacros" ]; then
@@ -15,25 +16,26 @@ function check_rpmmacros(){
   fi
 }
 
-function upload_to_git(){
-  for srpm in $(cat $pkg_sync_dir/list/local_pkgs.list)
+function upload_to_ox3_git(){
+  for srpm in $(cat $pkg_sync_dir/list/ox3_git.list)
   do
     pkgname=$(rpm -qp --queryformat %{name}"\n" $srpm) || exit 1
     pkgver=$(rpm -qp  --queryformat %{version}-%{release}"\n" $srpm)
-    ssh $user@$git_ip "ls -ld $git_path/$pkgname.git > /dev/null 2>&1";
+    ssh $user@$git_ip "ls -ld $ox3_git_path/$pkgname.git > /dev/null 2>&1";
     case "$?" in
       "2")
-        ssh $user@$git_ip "mkdir $git_path/$pkgname.git && cd $git_path/$pkgname.git && git init --bare --shared"
+        ssh $user@$git_ip "mkdir $ox3_git_path/$pkgname.git && cd $ox3_git_path/$pkgname.git && git init --bare --shared"
         echo "create $pkgname.git successful"
-        rpm -i $srpm 2> /dev/null || exit
+        rpm -i $srpm 2> /dev/null
         cp $pkg_sync_dir/Makefile $HOME/rpmbuild/$pkgname || exit 2
         cd $HOME/rpmbuild/$pkgname
+        mkdir ossii
+        cp -a SPECS/* ossii
         git init
-        git add . && git commit -m "upload $pkgname-$pkgver from Fedora" 
-        git remote add origin $user@$git_ip:$git_path/$pkgname.git
+        git add . && git commit -m "upload $pkgname-$pkgver from OX 3" 
+        git remote add origin $user@$git_ip:$ox3_git_path/$pkgname.git
         git push origin master || exit 3
         git push origin master:refs/heads/develop
-        git push origin master:refs/heads/official
         ;;
       "0")
         if [ -e "$HOME/rpmbuild/$pkgname" ]; then
@@ -43,17 +45,17 @@ function upload_to_git(){
             git rm -r SPECS SOURCES
           fi
           rpm -i $srpm 2> /dev/null
-          git add . && git commit -m "upload $pkgname-$pkgver from Fedora"
+          git add . && git commit -m "upload $pkgname-$pkgver from OX 3"
           git push || exit 4
         else
           mkdir -p $HOME/rpmbuild/$pkgname
           cd $HOME/rpmbuild/$pkgname
-          git clone $user@$git_ip:$git_path/$pkgname.git $HOME/rpmbuild/$pkgname || exit 5
-          git checkout -b official origin/official
+          git clone $user@$git_ip:$ox3_git_path/$pkgname.git $HOME/rpmbuild/$pkgname || exit 5
+          git checkout -b develop origin/develop
           git rm -r SPECS SOURCES
           rpm -i $srpm 2> /dev/null
-          git add . && git commit -m "upload $pkgname-$pkgver from Fedora" 
-          git push || exit 6
+          git add . && git commit -m "upload $pkgname-$pkgver from OX 3" 
+          git push || exit 6 
         fi
         ;;
       *)
@@ -65,13 +67,12 @@ function upload_to_git(){
     done
   }
 
-
-if [ ! -e "$pkg_sync_dir/list/local_pkgs.list" ]; then
-  echo "$pkg_sync_dir/list/local_pkgs.list not exist"
-  logger -i -p local5.notice -t pkg_rsync "$pkg_sync_dir/list/local_pkgs.list not exist"
+if [ ! -e "$pkg_sync_dir/list/ox3_git.list" ]; then
+  echo "$pkg_sync_dir/list/ox3_git.list not exist"
+  logger -i -p local5.notice -t pkg_rsync "$pkg_sync_dir/list/ox3_git.list not exist"
   exit 8
 fi
 
 check_rpmmacros;
-upload_to_git;
+upload_to_ox3_git;
 cd ~ && rm -rf $HOME/rpmbuild/*
